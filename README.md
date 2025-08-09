@@ -29,8 +29,8 @@ A Three.js-powered 3D portfolio application built with React, TypeScript, and Vi
 
 1. Clone the repository:
    ```bash
-   git clone <repository-url>
-   cd Portfolio
+   git clone git@github.com:Alae-J/Developper-Portfolio.git
+   cd Developper-Portfolio
    ```
 
 2. Install dependencies:
