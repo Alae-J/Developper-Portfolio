@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { performanceService, PerformanceMode } from '@/services/PerformanceService'
+import { performanceService } from '@/services/PerformanceService'
 
 // Mock the performance.now() function
 Object.defineProperty(window, 'performance', {

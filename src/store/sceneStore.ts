@@ -95,7 +95,7 @@ const initialState: SceneState = {
 
 export const useSceneStore = create<SceneStore>()(
   subscribeWithSelector(
-    immer((set, get) => ({
+    immer((set, _get) => ({
       ...initialState,
       
       // Scene management

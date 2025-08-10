@@ -5,9 +5,42 @@ node_modules
 
 # Production
 /dist
+/build
+*.tsbuildinfo
 
 # Local env files
 .env*.local
+.env.production
+.env.development
+
+# Vercel
+.vercel
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/
+
+# 3D Asset temporary files
+*.blend1
+*.blend2
+*.fbx.meta
+*.obj.meta
+*_LOD*.glb
+*_temp*.*
+
+# Performance logs
+*.log
+performance-*.json
+
+# Build artifacts
+*.gz
+*.br
+.rollup.cache/
 
 # Log files
 npm-debug.log*

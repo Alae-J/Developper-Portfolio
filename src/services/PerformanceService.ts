@@ -5,6 +5,19 @@ export interface PerformanceMetrics {
   frameTime: number
   memoryUsage?: number
   gpuMemoryUsage?: number
+  loadTime?: number
+  renderTime?: number
+  sceneComplexity?: number
+}
+
+export interface SceneMetrics {
+  drawCalls: number
+  triangles: number
+  geometries: number
+  textures: number
+  materials: number
+  lights: number
+  objects: number
 }
 
 export interface PerformanceSettings {
@@ -26,6 +39,17 @@ class PerformanceService {
   private targetFPS = 60
   private callbacks: ((metrics: PerformanceMetrics) => void)[] = []
   private animationFrameId: number | null = null
+  private sceneLoadStartTime?: number
+  private sceneMetrics: SceneMetrics = {
+    drawCalls: 0,
+    triangles: 0,
+    geometries: 0,
+    textures: 0,
+    materials: 0,
+    lights: 0,
+    objects: 0
+  }
+  private renderStartTime = 0
 
   private performanceSettings: Record<PerformanceMode, PerformanceSettings> = {
     high: {
@@ -86,7 +110,10 @@ class PerformanceService {
           fps: this.fps,
           frameTime: this.frameTime,
           memoryUsage: this.getMemoryUsage(),
-          gpuMemoryUsage: this.getGPUMemoryUsage()
+          gpuMemoryUsage: this.getGPUMemoryUsage(),
+          loadTime: this.sceneLoadStartTime ? performance.now() - this.sceneLoadStartTime : undefined,
+          renderTime: this.renderStartTime ? performance.now() - this.renderStartTime : undefined,
+          sceneComplexity: this.calculateSceneComplexity()
         }
 
         this.callbacks.forEach(callback => callback(metrics))
@@ -174,6 +201,93 @@ class PerformanceService {
       platform: (navigator as any).userAgentData?.platform || navigator.platform || 'unknown',
       cookieEnabled: navigator.cookieEnabled
     }
+  }
+
+  public startSceneLoad(): void {
+    this.sceneLoadStartTime = performance.now()
+  }
+
+  public endSceneLoad(): number {
+    if (this.sceneLoadStartTime) {
+      const loadTime = performance.now() - this.sceneLoadStartTime
+      this.sceneLoadStartTime = undefined
+      return loadTime
+    }
+    return 0
+  }
+
+  public updateSceneMetrics(metrics: Partial<SceneMetrics>): void {
+    this.sceneMetrics = { ...this.sceneMetrics, ...metrics }
+  }
+
+  public getSceneMetrics(): SceneMetrics {
+    return { ...this.sceneMetrics }
+  }
+
+  public startRender(): void {
+    this.renderStartTime = performance.now()
+  }
+
+  public endRender(): number {
+    if (this.renderStartTime) {
+      const renderTime = performance.now() - this.renderStartTime
+      this.renderStartTime = 0
+      return renderTime
+    }
+    return 0
+  }
+
+  public reportToAnalytics(): void {
+    const metrics = {
+      fps: this.fps,
+      averageFPS: this.getAverageFPS(),
+      frameTime: this.frameTime,
+      memoryUsage: this.getMemoryUsage(),
+      performanceMode: this.performanceMode,
+      sceneComplexity: this.calculateSceneComplexity(),
+      webglInfo: this.checkWebGLSupport(),
+      browserInfo: this.getBrowserInfo(),
+      timestamp: Date.now()
+    }
+
+    if (typeof window !== 'undefined' && import.meta.env.PROD) {
+      if ('gtag' in window) {
+        (window as any).gtag('event', '3d_performance_report', {
+          event_category: '3D',
+          event_label: 'performance_metrics',
+          custom_parameters: metrics
+        })
+      }
+
+      if ((window as any).vercel?.analytics) {
+        (window as any).vercel.analytics.track('3d_performance', metrics)
+      }
+    }
+
+    console.log('[Performance Report]:', metrics)
+  }
+
+  private calculateSceneComplexity(): number {
+    const {
+      drawCalls,
+      triangles,
+      geometries,
+      textures,
+      materials,
+      lights,
+      objects
+    } = this.sceneMetrics
+
+    const complexityScore = 
+      (drawCalls * 0.1) +
+      (triangles * 0.00001) +
+      (geometries * 0.05) +
+      (textures * 0.02) +
+      (materials * 0.03) +
+      (lights * 0.2) +
+      (objects * 0.01)
+
+    return Math.round(complexityScore * 100) / 100
   }
 
   private updateFPSHistory(fps: number): void {
